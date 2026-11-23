@@ -1,0 +1,233 @@
+<!doctype html>
+<!-- Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+     SPDX-License-Identifier: CC-BY-4.0 -->
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KiroCrew × 亚马逊云科技 DevOps Agent · 主动发现架构</title>
+<style>
+:root{--bg:#050c15;--panel:#0b1623;--line:#1d3247;--text:#eaf3fa;--muted:#88a1b6;
+--cyan:#4fe3ff;--violet:#b48dff;--amber:#ffc65c;--green:#5cf0a2;--red:#ff6b81}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;color:var(--text);font-family:"PingFang SC","Microsoft YaHei",Inter,sans-serif;
+background:radial-gradient(1200px 600px at 15% -10%,rgba(79,227,255,.12),transparent 60%),
+radial-gradient(900px 500px at 100% 0%,rgba(180,141,255,.12),transparent 60%),var(--bg)}
+header{max-width:1560px;margin:0 auto;padding:22px 28px 10px;display:flex;align-items:flex-end;justify-content:space-between;gap:20px}
+h1{margin:0;font-size:28px;letter-spacing:.5px}
+h1 span{background:linear-gradient(90deg,var(--cyan),var(--violet));-webkit-background-clip:text;color:transparent}
+header p{margin:6px 0 0;color:var(--muted);font-size:14px}
+.controls{display:flex;gap:8px;align-items:center}
+button{background:#102233;color:var(--text);border:1px solid #2a4864;border-radius:10px;padding:8px 14px;font-size:14px;cursor:pointer}
+button:hover{border-color:var(--cyan)}
+button.on{background:var(--cyan);color:#04121c;border-color:var(--cyan);font-weight:700}
+.stage{max-width:1560px;margin:0 auto;padding:6px 28px 0;display:grid;grid-template-columns:1fr 330px;gap:18px}
+svg{width:100%;height:auto;display:block;background:linear-gradient(180deg,#081422,#06101b);border:1px solid var(--line);border-radius:18px}
+.zone{fill:rgba(79,227,255,.025);stroke:#25425c;stroke-dasharray:7 6;stroke-width:1.5}
+.zone.local{fill:rgba(92,240,162,.03);stroke:#285a45}
+.zlabel{fill:var(--muted);font-size:15px;font-weight:700;letter-spacing:1px}
+.wall{stroke:var(--red);stroke-width:3;stroke-dasharray:4 7;opacity:.8}
+.wlabel{fill:var(--red);font-size:13px;font-weight:700;letter-spacing:2px}
+.node rect{fill:#0d1b2a;stroke:#294560;stroke-width:1.6;transition:all .35s}
+.node .t{fill:#cfe0ee;font-size:16.5px;font-weight:700;transition:fill .35s}
+.node .s{fill:var(--muted);font-size:12.5px}
+.node .i{font-size:22px}
+.node.dim{opacity:.42}
+.node.on rect{stroke:var(--c);stroke-width:2.6;fill:color-mix(in srgb,var(--c) 14%,#0d1b2a);filter:url(#glow)}
+.node.on .t{fill:#fff}
+.edge{fill:none;stroke:#26405a;stroke-width:2;marker-end:url(#arrowDim);transition:stroke .3s}
+.edge.on{stroke:var(--c);stroke-width:3.2;stroke-dasharray:11 8;animation:flow .7s linear infinite;marker-end:url(#arrowOn)}
+@keyframes flow{to{stroke-dashoffset:-19}}
+.elabel{fill:#5f7a91;font-size:12px;paint-order:stroke;stroke:#07121e;stroke-width:5px;text-anchor:middle;transition:fill .3s}
+.elabel.on{fill:#fff;font-weight:700}
+.side{display:flex;flex-direction:column;gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
+.now .step{font-size:13px;color:var(--muted);letter-spacing:1px}
+.now h2{margin:6px 0 4px;font-size:24px}
+.now .time{font-family:"SF Mono",Menlo,monospace;color:var(--c,var(--cyan));font-size:15px}
+.now p{margin:10px 0 0;line-height:1.7;font-size:14.5px;color:#d4e3ee}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.steps li{display:flex;gap:10px;align-items:center;padding:7px 10px;border-radius:10px;font-size:14px;color:var(--muted);cursor:pointer;border:1px solid transparent}
+.steps li b{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;background:#132638}
+.steps li.on{color:#fff;border-color:var(--c);background:color-mix(in srgb,var(--c) 12%,transparent)}
+.steps li.on b{background:var(--c);color:#04121c}
+.steps li.done{color:#b7c9d8}
+.adv{max-width:1560px;margin:16px auto 28px;padding:0 28px;display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.adv div{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px 18px;transition:all .35s}
+.adv h3{margin:0 0 6px;font-size:17px}
+.adv p{margin:0;color:var(--muted);font-size:13.5px;line-height:1.6}
+.adv div.on{border-color:var(--c);box-shadow:0 0 0 1px var(--c),0 0 30px color-mix(in srgb,var(--c) 30%,transparent);transform:translateY(-3px)}
+.adv div.on h3{color:var(--c)}
+.progress{height:4px;background:#132638;border-radius:4px;overflow:hidden;margin-top:12px}
+.progress i{display:block;height:100%;width:0;background:var(--c,var(--cyan))}
+@media (prefers-reduced-motion:reduce){.edge.on{animation:none}.node rect,.adv div{transition:none}}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>告警发生，<span>DevOps Agent 主动调查</span></h1>
+    <p>KiroCrew × 亚马逊云科技 DevOps Agent · us-east-1 实测链路（2026-10-21）· 全程无入站端口 · 调查只读 · 处置由人决定</p>
+  </div>
+  <div class="controls">
+    <button id="prev" aria-label="上一步">◀</button>
+    <button id="play" aria-label="播放或暂停">⏸ 暂停</button>
+    <button id="next" aria-label="下一步">▶</button>
+    <button id="overview">全景架构</button>
+  </div>
+</header>
+
+<div class="stage">
+  <svg id="svg" viewBox="0 0 1610 900" role="img" aria-label="主动发现架构图">
+    <defs>
+      <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+        <feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+      <marker id="arrowDim" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#26405a"/></marker>
+      <marker id="arrowOn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0L10,5L0,10z" fill="#ffffff"/></marker>
+    </defs>
+    <rect class="zone" x="30" y="40" width="1115" height="830" rx="22"/>
+    <text class="zlabel" x="56" y="74">亚马逊云科技账号 · us-east-1</text>
+    <rect class="zone local" x="1210" y="40" width="370" height="830" rx="22"/>
+    <text class="zlabel" x="1236" y="74">本机 · KiroCrew</text>
+    <line class="wall" x1="1177" y1="60" x2="1177" y2="850"/>
+    <text class="wlabel" transform="translate(1168 455) rotate(-90)" text-anchor="middle">无入站端口 · 本机只出站 HTTPS</text>
+    <g id="edges"></g><g id="labels"></g><g id="nodes"></g><g id="packets"></g>
+  </svg>
+
+  <aside class="side">
+    <div class="card now" id="now">
+      <div class="step" id="stepNo">STEP 1 / 8</div>
+      <h2 id="stepTitle">—</h2>
+      <div class="time" id="stepTime">—</div>
+      <p id="stepText">—</p>
+      <div class="progress"><i id="bar"></i></div>
+    </div>
+    <div class="card"><ul class="steps" id="stepList"></ul></div>
+  </aside>
+</div>
+
+<section class="adv">
+  <div id="adv-proactive" style="--c:var(--amber)"><h3>🚨 主动调查</h3><p>告警进入 ALARM 即自动创建 Investigation，375 ms 完成，无需人工发现和提问。</p></div>
+  <div id="adv-evidence" style="--c:var(--violet)"><h3>🔍 证据关联</h3><p>指标 + 日志 + CloudTrail 变更自动关联，定位到故障前 1 秒的 PutParameter。</p></div>
+  <div id="adv-secure" style="--c:var(--green)"><h3>🛡 零入站暴露</h3><p>无 Function URL / API 网关 / Hook；结果经加密 SQS 出站拉取，最小权限。</p></div>
+  <div id="adv-human" style="--c:var(--red)"><h3>🤝 人机分工</h3><p>Agent 只读调查、无权改资源；是否处置、何时处置由运维人员决定。</p></div>
+</section>
+
+<script>
+const C={cyan:"#4fe3ff",violet:"#b48dff",amber:"#ffc65c",green:"#5cf0a2",red:"#ff6b81"};
+const N={
+ A:[70,110,190,80,"⏱","Scheduler",["每分钟调用一次"],"cyan"],
+ B:[310,110,210,80,"🧩","inventory-sync",["演示 Lambda · 无入站端点"],"cyan"],
+ S:[310,255,210,66,"🎛","SSM 故障开关",["fault-mode = none / error"],"red"],
+ C:[580,110,230,80,"🚨","CloudWatch 告警",["P2-DEMO-…SyncErrors"],"amber"],
+ D:[870,110,230,80,"🔀","EventBridge 告警规则",["仅匹配 P2-DEMO- · ALARM"],"amber"],
+ E:[870,270,230,80,"⚡","Trigger Lambda",["CreateBacklogTask · 幂等"],"amber"],
+ F:[480,410,400,210,"🤖","DevOps Agent",["Agent Space","自动 Investigation · 拓扑知识图谱","只读角色访问账号内证据","输出 investigation_summary_md"],"violet"],
+ G1:[70,420,250,58,"📈","CloudWatch 指标",["Errors：100% 失败"],"violet"],
+ G2:[70,498,250,58,"📜","CloudWatch 日志",["inventory-service timeout"],"violet"],
+ G3:[70,576,250,58,"🕵","CloudTrail",["PutParameter 变更记录"],"violet"],
+ H:[480,700,260,80,"🔀","EventBridge 结果规则",["aws.aidevops 终态事件"],"green"],
+ I:[850,700,250,80,"🔐","SQS 结果队列",["SSE 加密 · 拒绝非 TLS"],"green"],
+ Q:[850,800,250,50,"🧯","DLQ + 告警",["处理失败 5 次进入"],"green"],
+ N:[1250,105,300,95,"🧑‍💻","运维人员",["阅读结论 · 人工决策"],"red"],
+ M:[1250,330,300,80,"💬","Chat 追问",["围绕证据继续提问"],"cyan"],
+ L:[1250,480,300,96,"📣","KiroCrew Dashboard",["主动通知 · 正式结论"],"green"],
+ K:[1250,700,300,80,"🔄","KiroCrew 脚本 cron",["每 60 秒出站拉取 · 零模型调用"],"green"]
+};
+const E={
+ e1:["M260 150 L310 150","调用"],
+ e3:["M415 255 L415 190","读取开关"],
+ e2:["M1250 160 C1170 160 1150 230 1080 230 L560 230 C540 230 526 242 521 262","修改开关"],
+ e4:["M520 150 L580 150","Errors"],
+ e5:["M810 150 L870 150","状态事件"],
+ e6:["M985 190 L985 270","命中规则"],
+ e7:["M985 350 C985 420 945 455 880 455","创建调查"],
+ e8a:["M320 449 C400 449 420 462 480 462",""],
+ e8b:["M320 527 L480 527","只读关联"],
+ e8c:["M320 605 C400 605 420 592 480 592",""],
+ e9:["M610 620 L610 700","终态事件"],
+ e10:["M740 740 L850 740","投递"],
+ e11:["M1100 740 L1250 740","出站拉取"],
+ e12:["M1400 700 L1400 576","正式摘要"],
+ e13:["M1400 480 L1400 410","追问"],
+ e14:["M1250 370 C1100 370 965 520 880 520","Chat（只读）"],
+ e15:["M1550 528 C1598 440 1598 225 1550 152","人工决策"]
+};
+const STEPS=[
+ {t:"平稳运行",time:"常态",c:"cyan",n:["A","B","S"],e:["e1","e3"],adv:[],
+  x:"Scheduler 每分钟调用 inventory-sync，函数读取故障开关 fault-mode=none，正常同步 120 条库存。"},
+ {t:"注入故障",time:"20:36:56",c:"red",n:["N","S"],e:["e2"],adv:[],
+  x:"运维人员把故障开关改为 error，模拟一次有风险的配置变更。CloudTrail 自动记录这次 PutParameter。"},
+ {t:"真实报错",time:"20:37:00",c:"red",n:["A","B","S","C"],e:["e1","e3","e4"],adv:[],
+  x:"之后每次运行都抛出 inventory-service timeout，Lambda Errors 指标持续上升。此时没有人去问 AI。"},
+ {t:"主动发现",time:"20:39:48",c:"amber",n:["C","D","E","F"],e:["e5","e6","e7"],adv:["proactive"],
+  x:"告警进入 ALARM，状态事件推送到 EventBridge，Trigger Lambda 用 375 ms 创建 Investigation。全程没有人提问。"},
+ {t:"证据关联",time:"调查中",c:"violet",n:["G1","G2","G3","F"],e:["e8a","e8b","e8c"],adv:["evidence"],
+  x:"Agent 以只读角色关联三类证据：Errors 100% 失败、超时日志、12:36:59 的 PutParameter（比故障早 1 秒）。约 73 ms 快速失败，判定为注入故障而非下游宕机。"},
+ {t:"结果回推",time:"20:47:48",c:"green",n:["F","H","I","Q","K"],e:["e9","e10","e11"],adv:["secure"],
+  x:"调查完成，终态事件进入加密 SQS。KiroCrew 从本机出站拉取，核验来源、Agent Space 和账号。本机不开放任何入站端口。"},
+ {t:"主动报告",time:"20:51",c:"cyan",n:["K","L","M","F"],e:["e12","e13","e14"],adv:["proactive","evidence"],
+  x:"Dashboard 收到正式 investigation_summary_md：根因、机制、处置参考。需要时再用 Chat 围绕证据追问。"},
+ {t:"人工处置",time:"人来决定",c:"green",n:["L","N","S"],e:["e15","e2"],adv:["human"],lab:{e2:"恢复 none"},
+  x:"Agent 只读，无权修改资源。运维人员阅读结论后把开关恢复为 none，告警自动回到 OK。"}
+];
+const NS="http://www.w3.org/2000/svg",$=s=>document.querySelector(s);
+const mk=(tag,attrs,parent)=>{const el=document.createElementNS(NS,tag);for(const k in attrs)el.setAttribute(k,attrs[k]);parent&&parent.appendChild(el);return el};
+const nodeEl={},edgeEl={},labelEl={};
+for(const k in N){const [x,y,w,h,icon,title,sub,c]=N[k];const g=mk("g",{class:"node"},$("#nodes"));g.style.setProperty("--c",C[c]);
+ mk("rect",{x,y,width:w,height:h,rx:14},g);
+ const big=k==="F",ty=big?y+42:y+h/2-(sub.length?4:-6);
+ mk("text",{class:"i",x:x+16,y:big?y+46:y+h/2+8},g).textContent=icon;
+ mk("text",{class:"t",x:x+50,y:ty},g).textContent=title;
+ sub.forEach((s,i)=>{mk("text",{class:"s",x:x+50,y:ty+(big?30:20)+i*(big?30:16)},g).textContent=(big?"▸ ":"")+s});
+ nodeEl[k]=g;}
+for(const k in E){const p=mk("path",{class:"edge",d:E[k][0],id:k},$("#edges"));edgeEl[k]=p;
+ const L=p.getTotalLength(),m=p.getPointAtLength(L/2);
+ labelEl[k]=mk("text",{class:"elabel",x:m.x,y:m.y-8},$("#labels"));labelEl[k].textContent=E[k][1];}
+const list=$("#stepList");
+STEPS.forEach((s,i)=>{const li=document.createElement("li");li.style.setProperty("--c",C[s.c]);
+ const num=document.createElement("b");num.textContent=String(i+1);
+ const when=document.createElement("span");when.style.cssText="margin-left:auto;font-size:12px;opacity:.8";when.textContent=s.time;
+ li.append(num,document.createTextNode(s.t),when);
+ li.onclick=()=>{go(i);};list.appendChild(li);});
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const STEP_MS=5600;let cur=0,playing=!reduce,overview=false,stepStart=performance.now(),packets=[];
+function clearState(){Object.values(nodeEl).forEach(g=>g.classList.remove("on","dim"));
+ Object.values(edgeEl).forEach(p=>{p.classList.remove("on");p.style.removeProperty("--c")});
+ for(const k in labelEl){labelEl[k].classList.remove("on");labelEl[k].textContent=E[k][1]}
+ document.querySelectorAll(".adv div").forEach(d=>d.classList.remove("on"));$("#packets").replaceChildren();packets=[];}
+function render(){clearState();const s=STEPS[cur],col=C[s.c];
+ overview=false;$("#overview").classList.remove("on");
+ for(const k in nodeEl)nodeEl[k].classList.add(s.n.includes(k)?"on":"dim");
+ s.e.forEach(k=>{edgeEl[k].classList.add("on");edgeEl[k].style.setProperty("--c",col);labelEl[k].classList.add("on");
+  if(s.lab&&s.lab[k])labelEl[k].textContent=s.lab[k];
+  if(!reduce){const len=edgeEl[k].getTotalLength();[0,.5].forEach(off=>{packets.push({p:edgeEl[k],len,off,
+   el:mk("circle",{r:6,fill:col,filter:"url(#glow)"},$("#packets"))})})}});
+ s.adv.forEach(a=>$("#adv-"+a).classList.add("on"));
+ $("#now").style.setProperty("--c",col);$("#stepNo").textContent=`STEP ${cur+1} / ${STEPS.length}`;
+ $("#stepTitle").textContent=s.t;$("#stepTime").textContent=s.time;$("#stepText").textContent=s.x;
+ [...list.children].forEach((li,i)=>{li.classList.toggle("on",i===cur);li.classList.toggle("done",i<cur)});
+ stepStart=performance.now();}
+function showOverview(){clearState();overview=true;playing=false;$("#play").textContent="▶ 播放";$("#overview").classList.add("on");
+ for(const k in nodeEl)nodeEl[k].classList.add("on");
+ for(const k in edgeEl){edgeEl[k].classList.add("on");edgeEl[k].style.setProperty("--c","#5fbfdc");edgeEl[k].style.animation="none";labelEl[k].classList.add("on")}
+ $("#now").style.setProperty("--c",C.cyan);$("#stepNo").textContent="OVERVIEW";$("#stepTitle").textContent="全景架构";
+ $("#stepTime").textContent="8 步闭环 · 约 15 分钟";$("#stepText").textContent="告警 → 自动调查 → 证据关联 → 加密队列 → 本机出站拉取 → Dashboard 主动报告 → 人工处置。所有 Lambda 只由亚马逊云科技服务调用，本机不开放入站端口。";
+ $("#bar").style.width="100%";document.querySelectorAll(".adv div").forEach(d=>d.classList.add("on"));
+ [...list.children].forEach(li=>li.classList.remove("on","done"));}
+function go(i){Object.values(edgeEl).forEach(p=>p.style.animation="");cur=(i+STEPS.length)%STEPS.length;render();}
+$("#prev").onclick=()=>go(cur-1);$("#next").onclick=()=>go(cur+1);
+$("#play").onclick=()=>{if(overview)go(cur);playing=!playing;$("#play").textContent=playing?"⏸ 暂停":"▶ 播放";stepStart=performance.now()};
+$("#overview").onclick=()=>overview?go(cur):showOverview();
+function tick(now){if(!overview){const el=(now-stepStart)/STEP_MS;$("#bar").style.width=Math.min(el,1)*100+"%";
+  if(playing&&el>=1)go(cur+1);
+  packets.forEach(o=>{const f=((now/1500)+o.off)%1,pt=o.p.getPointAtLength(f*o.len);o.el.setAttribute("cx",pt.x);o.el.setAttribute("cy",pt.y)})}
+ requestAnimationFrame(tick);}
+if(reduce)$("#play").textContent="▶ 播放";
+new URLSearchParams(location.search).get("view")==="overview"?showOverview():render();
+const s=new URLSearchParams(location.search).get("step");if(s!==null&&!isNaN(+s)){playing=false;$("#play").textContent="▶ 播放";go(+s);}
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>

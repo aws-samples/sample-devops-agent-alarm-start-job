@@ -1,0 +1,13 @@
+# Local, account-specific values (see .env.example)
+.env.local
+.env
+.kiro/runtime/
+.kiro/settings/
+__pycache__/
+*.pyc
+*.bak-*
+.DS_Store
+.security-agent/
+boto3-layer.zip
+layer/
+

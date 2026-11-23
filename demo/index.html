@@ -1,0 +1,156 @@
+<!doctype html>
+<!-- Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+     SPDX-License-Identifier: Apache-2.0 -->
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KiroCrew × 亚马逊云科技 DevOps Agent Demo</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+
+  <header class="hero">
+    <div class="brand-line">
+      <span class="brand-mark">DA</span>
+      <span>KiroCrew × 亚马逊云科技 DevOps Agent</span>
+      <span id="modeBadge" class="badge">加载本机配置</span>
+    </div>
+    <h1>从告警信号到<span>主动运维调查</span></h1>
+    <p>DevOps Agent 自动关联账号内证据并形成正式调查摘要；KiroCrew 负责接收结果、主动报告和后续协作。所有业务资源操作均为只读。</p>
+    <div class="hero-actions">
+      <button id="preflightButton" class="button primary">01 · 运行演示预检</button>
+      <span id="preflightState" class="state muted">尚未预检</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="config-strip" aria-label="演示环境">
+      <div><span>账号</span><strong id="accountId">—</strong></div>
+      <div><span>区域</span><strong id="region">—</strong></div>
+      <div><span>Agent Space</span><strong id="spaceId">—</strong></div>
+      <div><span>凭证 Profile</span><strong id="profile">—</strong></div>
+    </section>
+
+    <section class="section-heading">
+      <span class="eyebrow">PRIMARY FLOW · PROACTIVE DISCOVERY</span>
+      <h2>告警发生后，自动启动调查</h2>
+      <p>演示工作负载产生真实报错；告警经 EventBridge 触发最小权限 Lambda 创建只读 Investigation；调查终态进入加密 SQS，由 KiroCrew 出站拉取正式 Journal 摘要。</p>
+    </section>
+
+    <section class="scenario-grid">
+      <article class="scenario-card" data-accent="amber">
+        <span class="scenario-number">01</span>
+        <h3>发现信号</h3>
+        <p>隔离的 inventory-sync 演示函数每分钟运行一次。切换故障开关后真实报错，P2-DEMO- 告警进入 ALARM。</p>
+      </article>
+      <article class="scenario-card" data-accent="cyan">
+        <span class="scenario-number">02</span>
+        <h3>自动调查</h3>
+        <p>EventBridge 调用无公网入口的 Lambda，使用幂等 token 创建只读 Investigation，Agent 关联指标、日志和配置变更。</p>
+      </article>
+      <article class="scenario-card" data-accent="violet">
+        <span class="scenario-number">03</span>
+        <h3>结果回推</h3>
+        <p>调查终态事件进入加密 SQS。KiroCrew 本机出站拉取并读取 investigation_summary_md，全程没有入站端口。</p>
+      </article>
+    </section>
+
+    <section class="workspace-panel">
+      <div class="panel-title">
+        <div>
+          <span class="eyebrow">DISCOVERY FEED</span>
+          <h2>主动调查任务</h2>
+        </div>
+        <span id="autoRefreshState" class="state muted">自动刷新 · 每 15 秒</span>
+      </div>
+      <div class="pipeline" id="pipeline" aria-live="polite">
+        <div class="stage-card idle" id="st-fault"><span>① 故障开关</span><b>—</b><small>SSM 参数</small></div>
+        <div class="stage-card idle" id="st-workload"><span>② 演示函数</span><b>—</b><small>最新日志</small></div>
+        <div class="stage-card idle" id="st-alarm"><span>③ CloudWatch 告警</span><b>—</b><small>P2-DEMO-…Errors</small></div>
+        <div class="stage-card idle" id="st-trigger"><span>④ 自动创建调查</span><b>—</b><small>Trigger Lambda</small></div>
+        <div class="stage-card idle" id="st-investigation"><span>⑤ DevOps Agent</span><b>—</b><small>Investigation</small></div>
+        <div class="stage-card idle" id="st-queue"><span>⑥ 结果队列</span><b>—</b><small>等待本机拉取</small></div>
+      </div>
+      <div id="alarmState" class="alarm-state unknown" aria-live="polite">告警 P2-DEMO-InventorySyncErrors：读取中…</div>
+      <pre id="discoveryOutput" aria-live="polite">等待 P2-DEMO- 告警进入 ALARM。页面每 15 秒自动读取告警和调查状态，不会创建或修改任何云资源。</pre>
+    </section>
+
+    <section class="section-heading">
+      <span class="eyebrow">FOLLOW-UP · CHAT</span>
+      <h2>保留 Chat，用于调查后的追问</h2>
+      <p>Chat 不再是主入口。它用于解释已发现的证据、梳理依赖和生成后续核查清单。</p>
+    </section>
+
+    <section class="scenario-grid">
+      <article class="scenario-card" data-accent="cyan">
+        <span class="scenario-number">01</span>
+        <h3>运行健康快照</h3>
+        <p>检查最近 3 小时的告警、异常服务与关键指标，优先展示证据。</p>
+        <button class="button scenario" data-scenario="health">开始健康检查</button>
+      </article>
+      <article class="scenario-card" data-accent="violet">
+        <span class="scenario-number">02</span>
+        <h3>成本优化候选</h3>
+        <p>识别低利用率资源与配置核查点，不执行任何自动变更。</p>
+        <button class="button scenario" data-scenario="cost">分析成本候选</button>
+      </article>
+      <article class="scenario-card" data-accent="amber">
+        <span class="scenario-number">03</span>
+        <h3>应用依赖拓扑</h3>
+        <p>从资源清单切换到服务调用链，识别关键依赖与单点风险。</p>
+        <button class="button scenario" data-scenario="topology">梳理服务拓扑</button>
+      </article>
+    </section>
+
+    <section class="workspace-panel">
+      <div class="panel-title">
+        <div>
+          <span class="eyebrow">LIVE RESPONSE</span>
+          <h2>Agent 分析结果</h2>
+        </div>
+        <button id="clearOutput" class="button ghost">清空</button>
+      </div>
+      <pre id="output" aria-live="polite">先运行预检，然后选择一个演示场景。</pre>
+      <div class="custom-row">
+        <textarea id="customQuestion" rows="3" maxlength="4000" placeholder="加载本机 Profile 后可输入自定义问题"></textarea>
+        <button id="customSend" class="button primary">发送自定义问题</button>
+      </div>
+    </section>
+
+    <section class="section-heading investigation-heading">
+      <span class="eyebrow">MANUAL FALLBACK · INVESTIGATION</span>
+      <h2>保留手工调查作为备用入口</h2>
+      <p>当告警尚未接入或需要临时扩大时间窗时，可以人工提交；正式主线仍是告警自动触发。</p>
+    </section>
+
+    <section class="investigation-panel">
+      <div class="investigation-copy">
+        <label for="investigationTitle">调查标题</label>
+        <input id="investigationTitle" maxlength="200" value="过去 24 小时运行异常调查">
+        <label for="investigationDescription">调查目标</label>
+        <textarea id="investigationDescription" rows="6" maxlength="4000">加载本机 Profile 后自动填入调查区域和只读边界。</textarea>
+        <button id="submitInvestigation" class="button primary wide">提交深度调查</button>
+      </div>
+      <div class="task-card">
+        <span class="eyebrow">TASK STATUS</span>
+        <div id="taskStatus" class="task-status idle">尚未提交</div>
+        <dl>
+          <div><dt>Task ID</dt><dd id="taskId">—</dd></div>
+          <div><dt>最近更新</dt><dd id="taskUpdated">—</dd></div>
+        </dl>
+        <button id="getSummary" class="button scenario hidden">提取调查结论</button>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>状态页运行在 127.0.0.1；凭证由本机 Profile 的标准凭证链处理，不进入浏览器。</span>
+    <span>不使用样例账号 · 资源分析只读 · 生产变更需人工确认</span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

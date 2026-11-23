@@ -1,0 +1,7 @@
+devops-agent-demo
+Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+
+Source code in this repository is licensed under the Apache License 2.0 (see LICENSE).
+Documentation (*.md) and the architecture diagram (docs/architecture-animation.html) are licensed
+under the Creative Commons Attribution 4.0 International License, CC BY 4.0 (see LICENSE-docs).
+Each file states its licence in an SPDX-License-Identifier header.
